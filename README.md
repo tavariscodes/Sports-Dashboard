@@ -1,46 +1,27 @@
-# Getting Started with Create React App
+# Sports Dashboard
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Introduction
+Sports dashboard is a web application used for viewing different games and players statistics across different sports. Displayed in an easy to read dashboard configurable by the user.  
 
-## Available Scripts
+## Scope
+A full stack spa implemented using reactjs, typescript, and GraphQL
 
-In the project directory, you can run:
+## Overview
+The goal of sports dashboard is to provide up to date sports data scraped from online sources to the end user in an inviting dashboard experience. The end user will have control over what data is displayed in their dashboard and the option to save different variations for future use. Additionally, the sports dashboard provides an api for developers with documented information on endpoints and resources available in different tiers. 
 
-### `yarn start`
+## Technologies
+* Nodejs
+* Material-UI
+* Graphql, GraphQl-Express, Graphiql
+* Express, Axios
+* Mongoose/mongodb
+* Reactjs, ReactRouter, 
+* Typescript
+* Axios, Cheerio (web scraping), (Puppeteer) 
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
-
-### `yarn test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `yarn build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `yarn eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Features
+* User has option to select data from several different sports: football, soccer, basketball
+* Three separate dashboard sections: Live Data, Player Stats, Game stats 
+* Data scraped from espn.com (also nba.com & nfl.com if time allots)
+* API endpoints for player data created using nodejs and express.. Ex: /sport/playerdata, /sport/gamedata, 
+* Navbar with links to four pages: Dashboard, Developer, Profile, Settings
