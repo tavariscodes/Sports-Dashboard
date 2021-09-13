@@ -1,5 +1,5 @@
 import * as cheerio from "cheerio";
-// import { EspnPlayer } from "./espn";
+import { EspnPlayer } from "./espn";
 
 export const scriptTagToJson = (context: cheerio.Root): any => {
     let parsedObject: any
@@ -13,3 +13,13 @@ export const scriptTagToJson = (context: cheerio.Root): any => {
     return parsedObject;
 }
 
+export const createPlayer = (player): EspnPlayer => { // add type for player
+    return {
+        id: player.id,
+        uid: player.uid,
+        guid: player.guid,
+        displayName: player.displayName,
+        url: player.link.web,
+        team: player.subtitle
+    }
+}
