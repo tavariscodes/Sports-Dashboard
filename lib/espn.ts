@@ -1,3 +1,4 @@
+import { queryByTestId } from "@testing-library/react";
 import axios, {AxiosRequestConfig} from "axios";
 import * as cheerio from "cheerio";
 import { scriptTagToJson, createPlayer } from './helper';
@@ -35,7 +36,7 @@ interface statQuery extends Query {
     type?: string;   // type of stat i.e. rushing, passing, etc...
 }
 
-interface EspnStat {
+interface EspnTeamStat {
     name: string;
     displayValue: string;
     value: number;
@@ -52,7 +53,12 @@ export interface EspnPlayer {
     displayName: string;
     team: string;
     url: string;
-  }  
+}
+
+interface EspnPlayerStat {
+    season: object; // refactor to seasonStat
+    career: object; // refactor to careerStat
+}
 
 class Espn implements EspnApi {
     private domain: string
@@ -90,7 +96,7 @@ class Espn implements EspnApi {
             .catch(err => {return(err)});
     }
  
-    async teamStats(team: EspnTeam, query?: statQuery): Promise<EspnStat[]> {
+    async teamStats(team: EspnTeam, query?: statQuery): Promise<EspnTeamStat[]> {
         // refactor
         let url: string | string[] = team.href.split('/'); url.splice(5, 0, 'stats'); url = url.join('/');
         let options: AxiosRequestConfig = {
@@ -102,7 +108,7 @@ class Espn implements EspnApi {
                 let $ = cheerio.load(response.data);
                 let statsObject: any = scriptTagToJson($);  // refactor
                 let teamStats: any[] = statsObject.stats.teamStats.team;    // refactor
-                let statsArray: EspnStat[] = []; 
+                let statsArray: EspnTeamStat[] = []; 
                 if (typeof query !== 'undefined') {
                     statsArray = teamStats.filter(stat => stat.type === query.type)[0].stats;
                 } else {
@@ -136,11 +142,54 @@ class Espn implements EspnApi {
         }
        return axios(options)
             .then(res => {
+                if (typeof res.data.results === 'undefined') {
+                    throw Error('no results try new query')
+                }
                 let player = createPlayer(res.data.results[0].contents[0]);
                 return player
             })
             .catch(err => {return(err)}); 
+    }
+
+    async playerStats(player: EspnPlayer, query?: statQuery): Promise<EspnPlayerStat> {
+        // refactor to return both career and season stats in one object :)
+
+        let url: string | string[] = player.url.split('/'); url.splice(5, 0, 'stats'); url = url.join('/'); // create stats url 
+        let options: AxiosRequestConfig = {
+            url,
+            headers: this.headers
         }
+        return axios(options)
+            .then(response => {
+                let $ = cheerio.load(response.data);
+                let statsObject: any = scriptTagToJson($); 
+                let playerStat: EspnPlayerStat = {career: {}, season: {}};
+                for( let x = 0; x < statsObject.player.stat.tbl.length; x++ ) { // loop thru each stat table
+                    let element = statsObject.player.stat.tbl[x];  // get each table element
+                    if (query.type === 'career') {
+                        let careerStats = {};
+                        element.col.forEach((elem, i) => {
+                            typeof elem === 'object' ? careerStats[elem.data] = element.car[i]: careerStats[elem] = element.car[i]; // set career stat object property
+                        })
+                        playerStat.career[element.ttl] = careerStats;
+                    } else if (query.type === 'season') {
+                        let seasonStats = {};
+                        playerStat.season[element.ttl] = [];
+                        for (let j = 0; j < element.row.length; j++) {
+                            element.col.forEach((elem, i) => {
+                                typeof elem === 'object' ? seasonStats[elem.data] = element.row[j][i]: seasonStats[elem] = element.row[j][i]; // set career stat object property   
+                            });
+                        playerStat.season[element.ttl].push(seasonStats)
+                        } 
+                    }
+                }
+                return playerStat;
+                // console.log(playerStat.career['Passing']);
+            })
+            
+            .catch(err => {return(err)})
+    }
+        
 }
 
 
@@ -168,8 +217,20 @@ const TestEspn = new Espn({});
 // .then(stats => console.log(stats))
 // .catch(err => console.log(err))
 
-TestEspn.player({name: 'Dak Prescott', sport: 'nfl'})
-    .then(player => console.log(player))
-    .catch(err => console.log(err));
+// TestEspn.player({name: 'donovan mitchell', sport: 'nba'})
+//     .then(player => console.log(player))
+//     .catch(err => console.log(err));
+TestEspn.playerStats({
+    id: '6482ece5f90392e2ffdd13901fdd3a49',
+    uid: 's:40~l:46~a:3908809',
+    guid: '6482ece5f90392e2ffdd13901fdd3a49',
+    displayName: 'Donovan Mitchell',
+    url: 'https://www.espn.com/nba/player/_/id/3908809/donovan-mitchell',
+    team: 'Utah Jazz'
+  }
+  , {sport: 'nba', type: 'season'}
+  )
+  .then(stats => console.log(stats))
+  .catch(err => console.log(err));
 export default Espn;
 
