@@ -1,9 +1,8 @@
 import axios, {AxiosRequestConfig} from "axios";
 import * as cheerio from "cheerio";
-import { scriptTagToJson } from './helper';
+import { scriptTagToJson, createPlayer } from './helper';
 
 // create types and methods for espn.com api
-
 interface ApiOptions {}
 
 interface EspnApi {
@@ -46,6 +45,14 @@ interface EspnStat {
     category?: string
 }
 
+export interface EspnPlayer { 
+    id: string;
+    uid: string;
+    guid: string;
+    displayName: string;
+    team: string;
+    url: string;
+  }  
 
 class Espn implements EspnApi {
     private domain: string
@@ -110,6 +117,30 @@ class Espn implements EspnApi {
             })
             .catch(err => {return(err)})
     }
+
+    async player(query: Query): Promise<EspnPlayer> {
+        let options: AxiosRequestConfig = {
+            url: 'https://site.web.api.espn.com/apis/search/v2',    // relies on api search endpoint vs web scraping
+            headers: this.headers,
+            params: {
+                'region': 'us',
+                'lang': 'en',
+                'section': query.sport,
+                'limit': '10',
+                'page': '1',
+                'query': query.name,
+                'dtciVideoSearch': 'true',
+                'iapPackages': 'ESPN_PLUS,ESPN_PLUS_MLB,ESPN_PLUS_UFC_PPV_266',
+                'type':'player'
+            } 
+        }
+       return axios(options)
+            .then(res => {
+                let player = createPlayer(res.data.results[0].contents[0]);
+                return player
+            })
+            .catch(err => {return(err)}); 
+        }
 }
 
 
@@ -137,5 +168,8 @@ const TestEspn = new Espn({});
 // .then(stats => console.log(stats))
 // .catch(err => console.log(err))
 
+TestEspn.player({name: 'Dak Prescott', sport: 'nfl'})
+    .then(player => console.log(player))
+    .catch(err => console.log(err));
 export default Espn;
 
