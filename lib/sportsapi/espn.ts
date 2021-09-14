@@ -190,7 +190,7 @@ class Espn implements EspnApi {
         
 }
 
-// const TestEspn = new Espn({});
+const TestEspn = new Espn({});
 // TestEspn.playerStats({
 //     id: '6482ece5f90392e2ffdd13901fdd3a49',
 //     uid: 's:40~l:46~a:3908809',
@@ -203,6 +203,9 @@ class Espn implements EspnApi {
 //   )
 //   .then(stats => console.log(stats))
 //   .catch(err => console.log(err));
+TestEspn.teams({sport: 'nba'})
+    .then(teams => console.log(teams))
+    .catch(err => console.log(err));
 
 export default Espn;
 
