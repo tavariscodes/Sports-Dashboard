@@ -1,4 +1,3 @@
-import { queryByTestId } from "@testing-library/react";
 import axios, {AxiosRequestConfig} from "axios";
 import * as cheerio from "cheerio";
 import { scriptTagToJson, createPlayer } from './helper';
@@ -57,7 +56,7 @@ export interface EspnPlayer {
 
 interface EspnPlayerStat {
     season: object; // refactor to seasonStat
-    career: object; // refactor to careerStat
+    career: object; // refactor to careerStat <- would actually probably need to create stattypes for each sport 
 }
 
 class Espn implements EspnApi {
@@ -184,7 +183,6 @@ class Espn implements EspnApi {
                     }
                 }
                 return playerStat;
-                // console.log(playerStat.career['Passing']);
             })
             
             .catch(err => {return(err)})
@@ -192,45 +190,19 @@ class Espn implements EspnApi {
         
 }
 
+// const TestEspn = new Espn({});
+// TestEspn.playerStats({
+//     id: '6482ece5f90392e2ffdd13901fdd3a49',
+//     uid: 's:40~l:46~a:3908809',
+//     guid: '6482ece5f90392e2ffdd13901fdd3a49',
+//     displayName: 'Donovan Mitchell',
+//     url: 'https://www.espn.com/nba/player/_/id/3908809/donovan-mitchell',
+//     team: 'Utah Jazz'
+//   }
+//   , {sport: 'nba', type: 'season'}
+//   )
+//   .then(stats => console.log(stats))
+//   .catch(err => console.log(err));
 
-
-const TestEspn = new Espn({});
-// TestEspn.teams({sport: 'nfl'})
-//     .then(teams => console.log(teams.length))
-//     .catch(err => console.log(err.message))
-
-// TestEspn.teamStats(
-//     {
-//         id: '10',
-//         href: 'https://www.espn.com/nfl/team/_/name/ten/tennessee-titans',
-//         name: 'Tennessee Titans',
-//         shortName: 'Titans',
-//         abbrev: 'ten',
-//         logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/nfl/500/ten.png&w=80&h=80&cquality=40&scale=crop&location=origin&transparent=true',
-//         conference: 'AFC South'
-//     },
-//     // {
-//     //     sport: 'nfl',
-//     //     type: 'rushing'
-//     // }
-// )
-// .then(stats => console.log(stats))
-// .catch(err => console.log(err))
-
-// TestEspn.player({name: 'donovan mitchell', sport: 'nba'})
-//     .then(player => console.log(player))
-//     .catch(err => console.log(err));
-TestEspn.playerStats({
-    id: '6482ece5f90392e2ffdd13901fdd3a49',
-    uid: 's:40~l:46~a:3908809',
-    guid: '6482ece5f90392e2ffdd13901fdd3a49',
-    displayName: 'Donovan Mitchell',
-    url: 'https://www.espn.com/nba/player/_/id/3908809/donovan-mitchell',
-    team: 'Utah Jazz'
-  }
-  , {sport: 'nba', type: 'season'}
-  )
-  .then(stats => console.log(stats))
-  .catch(err => console.log(err));
 export default Espn;
 
