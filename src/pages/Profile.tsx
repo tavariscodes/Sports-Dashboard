@@ -4,7 +4,7 @@ import MainLayout from '../components/MainLayout';
 const Profile: React.FC = () => {
     return(
         <div>
-            Profile :)
+            Coming soon...
         </div>
     )
 }
