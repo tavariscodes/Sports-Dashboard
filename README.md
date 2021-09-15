@@ -12,16 +12,16 @@ The goal of sports dashboard is to provide up to date sports data scraped from o
 ## Technologies
 * Nodejs
 * Material-UI
-* Graphql, GraphQl-Express, Graphiql
-* Express, Axios
-* Mongoose/mongodb
+* Graphql, Apollo-Server, Apollo-server-express
+* Axios
+<!-- * Mongoose/mongodb -->
 * Reactjs, ReactRouter, 
 * Typescript
-* Axios, Cheerio (web scraping), (Puppeteer) 
+* Axios, Cheerio (web scraping)
 
 ## Features
 * User has option to select data from several different sports: football, soccer, basketball
 * Three separate dashboard sections: Live Data, Player Stats, Game stats 
 * Data scraped from espn.com (also nba.com & nfl.com if time allots)
-* API endpoints for player data created using nodejs and express.. Ex: /sport/playerdata, /sport/gamedata, 
+* GraphQL queries for player data created using apollo-server.
 * Navbar with links to four pages: Dashboard, Developer, Profile, Settings
