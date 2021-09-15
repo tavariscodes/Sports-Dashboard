@@ -13,11 +13,10 @@ The goal of sports dashboard is to provide up to date sports data scraped from o
 * Nodejs
 * Material-UI
 * Graphql, Apollo-Server, Apollo-server-express
-* Axios
-<!-- * Mongoose/mongodb -->
+* Axios, Cheerio
+* Mongoose/mongodb
 * Reactjs, ReactRouter, 
 * Typescript
-* Axios, Cheerio (web scraping)
 
 ## Features
 * User has option to select data from several different sports: football, soccer, basketball
