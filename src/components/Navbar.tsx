@@ -6,51 +6,62 @@ import {
 } from "react-router-dom";
 
 import { 
-    makeStyles, 
     Tabs,
     Tab,
     Box,
     Typography, 
-    Icon
-} from '@material-ui/core';
+    Icon,
+    Theme
+} from '@mui/material';
 
-import AssessmentIcon from '@material-ui/icons/Assessment';
-import AccountCircleIcon from '@material-ui/icons/AccountCircle';
-import CodeIcon from '@material-ui/icons/Code';
-import SettingsIcon from '@material-ui/icons/Settings';
+import AssessmentIcon from '@mui/icons-material/Assessment';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import CodeIcon from '@mui/icons-material/Code';
+import SettingsIcon from '@mui/icons-material/Settings';
 import Dashboard from '../pages/Dashboard';
 import Profile from '../pages/Profile';
+import { useTheme,  } from '@mui/material/styles';
+import { makeStyles } from '@mui/styles';
 
 
-
-
-function a11yProps(index: any) {
+const a11yProps = (index: any) => {
     return {
       id: `vertical-tab-${index}`,
       'aria-controls': `vertical-tabpanel-${index}`,
     };
-  }
-  
-const useStyles = makeStyles({
+}
+const styles = {
+    tabText: {
+        color: 'white',
+    }
+}  
+
+const useStyles = makeStyles( (theme: Theme) => ({
     root: {
         display: 'flex',
-        backgroundColor: 'white',
+        backgroundColor:  theme.palette.secondary.dark ,
+
         height: '100vh'
     },
     labelContainer: {
         width: "auto",
-        padding: 0
+        padding: 0,
+
       },
       iconLabelWrapper: {
         flexDirection: "row",
         justifyContent: "space-evenly",
-        alignContent: 'center'
+        
+        alignContent: 'center',
       },
     tabs: {
         borderRight: `1px solid black`,
-        alignSelf: 'space-betweeen'
+        alignSelf: 'space-betweeen',
+    },
+    tabText: {
+        color: 'white',
     }
-})
+}))
 
 const Navbar: React.FC = () => {
     const routes = ['/dashboard', '/profile'];
@@ -63,7 +74,7 @@ const Navbar: React.FC = () => {
   };
     return(
         <>
-            <div className={classes.root}>
+            <div  className={classes.root}>
                 <Tabs
                     orientation="vertical"
                     value={selectedTab}
@@ -73,12 +84,14 @@ const Navbar: React.FC = () => {
                 >
                     <Tab 
                         label="Dashboard" {...a11yProps(0)} 
+                        style={styles.tabText}
                         icon={<AssessmentIcon/>} />
                     <Tab 
                         label="Profile" {...a11yProps(1)} 
+                        style={styles.tabText}
                         icon={<AccountCircleIcon/>} />
-                    <Tab label="Developer" {...a11yProps(2)} icon={<CodeIcon/>} />
-                    <Tab label="Settings" {...a11yProps(3)} icon={<SettingsIcon/>} />
+                    <Tab label="Developer" style={styles.tabText} {...a11yProps(2)} icon={<CodeIcon/>} />
+                    <Tab label="Settings" style={styles.tabText} {...a11yProps(3)} icon={<SettingsIcon/>} />
                 </Tabs>
             </div>
             {selectedTab === 0 && <Dashboard/> }
