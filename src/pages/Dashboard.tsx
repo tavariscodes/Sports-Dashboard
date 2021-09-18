@@ -1,15 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 // import MainLayout from '../components/MainLayout';
 import { useTheme, makeStyles, } from '@mui/styles';
 import { Theme, Box, Grid, Container, Paper, Typography, GridSize, IconButton, Menu, MenuItem} from '@mui/material';
-import { gql, useQuery } from '@apollo/client';
+import { gql, useLazyQuery, useQuery } from '@apollo/client';
 import BuildIcon from '@mui/icons-material/Build'
 import ArrowDropDownCircleIcon from '@mui/icons-material/ArrowDropDownCircle';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
-// const largeDataCard = styled('Paper')(({ theme }) => ({
-//     backgroundColor: theme.palette.primary.main
-
-// }))
 
 const styles = {
     root: {
@@ -68,11 +64,12 @@ interface Team {
 
 
 const GET_TEAMS = gql`
-    query {
-    teams(sport: "nba") {
-        name,
+    query teams($sport: String!) {
+        teams(sport: $sport) {
+            name,
+        }
     }
-}
+
 `
 
 const Gamebox: React.FC = () => {
@@ -106,19 +103,21 @@ const Gamebox: React.FC = () => {
 interface DataCardMenuProps {
     name: string,
     iconComponent: JSX.Element,
+    selectedHandler: React.Dispatch<string | null>,
     menuItems: string[],
-    children?: React.ReactNode
+    children?: React.ReactNode,
 }
 
-const DataCardMenu: React.FC<DataCardMenuProps> = ({name, iconComponent, menuItems}) => {
-    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+const DataCardMenu: React.FC<DataCardMenuProps> = ({name, iconComponent, menuItems, selectedHandler}) => {
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
+
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
     }
     const handleMenuItemClick = (event: React.MouseEvent<HTMLElement>, index: number) => {
         let selectedItem = menuItems[index];
-        console.log(selectedItem)
+        selectedHandler(selectedItem)
         setAnchorEl(null)
     }
     const handleClose = () => {
@@ -149,7 +148,6 @@ const DataCardMenu: React.FC<DataCardMenuProps> = ({name, iconComponent, menuIte
                 {menuItems.map((item, index) => {
                     return <MenuItem key={index} onClick={(event) => handleMenuItemClick(event, index)} >{item}</MenuItem>
                 })}
-                    
             </Menu>
         </div>
     )
@@ -158,12 +156,37 @@ const DataCardMenu: React.FC<DataCardMenuProps> = ({name, iconComponent, menuIte
 interface DataCardProps {
     xs: GridSize,
     header: string,
-    children?: React.ReactNode
+    queryItems: string[],
+    optionItems: string[],
+    children?: React.ReactNode,
 }
 
-const DataCard: React.FC<DataCardProps> = ({children, xs, header}) => {
-    const filterMenu = ['Profile', 'Login', 'Myaccount']
+const DataCard: React.FC<DataCardProps> = ({children, xs, header, queryItems, optionItems}) => {
+    const [selectedQuery, setSelectedQuery] = useState<string | null>(null);
+    const [selectedOption, setSelectedOption] = useState<string | null>(null);
+    const [getTeams, {loading, error, data}] = useLazyQuery<Team>(GET_TEAMS);
     const classes = useStyles();
+
+    useEffect(() => {
+        if (selectedOption) {
+            getTeams({variables : {sport: selectedOption.toLowerCase()}})
+        }
+    }, [selectedOption]);
+
+    useEffect(() => {
+        if (selectedQuery) {
+            alert(selectedQuery)
+        }   
+    }, [selectedQuery])
+
+    if (loading) {return <p>Loading...</p>};
+    if (error) {return <p>{error}</p>};
+    if (data) {
+        // if new data returned update queryItems
+        queryItems = data.teams.map(team => team.name);
+    }
+    
+
     return(
         <Grid container item xs={xs} style={{marginTop: '5px', height: '100%'}}>
             <Paper sx={styles.dataCard} elevation={6}>
@@ -172,8 +195,8 @@ const DataCard: React.FC<DataCardProps> = ({children, xs, header}) => {
                         {header}
                     </Typography>
                     <Box style={{display: 'flex'}}>
-                        <DataCardMenu name="filter" menuItems={filterMenu} iconComponent={<ArrowDropDownCircleIcon/>}/>
-                        <DataCardMenu name="options" menuItems={filterMenu} iconComponent={<BuildIcon/>}/>       
+                        <DataCardMenu name="filter" selectedHandler={setSelectedQuery} menuItems={queryItems} iconComponent={<ArrowDropDownCircleIcon/>}/>
+                        <DataCardMenu name="options" selectedHandler={setSelectedOption} menuItems={optionItems} iconComponent={<BuildIcon/>}/>       
                     </Box>
                 </Box>
                 {children}
@@ -185,57 +208,63 @@ const DataCard: React.FC<DataCardProps> = ({children, xs, header}) => {
 export default () => { // Dashboard
     const classes = useStyles();
     const theme: Theme = useTheme();
-    const {loading, error, data} = useQuery<Team>(GET_TEAMS);
+    const {loading, error, data} = useQuery<Team>(GET_TEAMS, {variables: {sport: 'nba'}});
     if (loading) {return <div>"loading"</div>}
     if (error) { return <div>{error}</div> }
     if (!data) {return <p>Couldn't load your webpage</p>}
+
+    const gameOptions = data.teams.map(team => team.name);
+    const standingsOptions = [''];
+    const gameStatsOptions = [''];
+    const optionMenu = ['NFL', 'NBA']
+    // console.log(data)
+
     return(
         <Container maxWidth={false} sx={styles.root}>
-                <Grid container className={classes.topContainer} spacing={2} >
-                    <DataCard xs={8} header="Games">
-                        <Box className={classes.gameBoxContainer}>
-                            <Grid container item style={{ gap: 5 }} >   {/* rows */}
-                                <Gamebox/>
-                                <Gamebox/>
-                                <Gamebox/>
-                                <Gamebox/>
-                            </Grid>
-                            <Grid container item style={{ gap: 5}}>
-                                <Gamebox/>
-                                <Gamebox/>
-                                <Gamebox/>
-                                <Gamebox/>
-                            </Grid>
-                            <Grid container item style={{ gap: 5}}>
-                                <Gamebox/>
-                                <Gamebox/>
-                                <Gamebox/>
-                                <Gamebox/>
-                            </Grid>
-                            <Grid container item style={{ gap: 5}} >
-                                <Gamebox/>
-                                <Gamebox/>
-                                <Gamebox/>
-                                <Gamebox/>
-                            </Grid>
-                            <Grid container item style={{ gap: 5}} >
-                                <Gamebox/>
-                                <Gamebox/>
-                                <Gamebox/>
-                                <Gamebox/>
-                            </Grid>
-                        </Box>
-                    </DataCard>
-                    <DataCard xs={4} header="Standings">
-                    </DataCard>
-                   
-                </Grid>
-                <Grid container className={classes.topContainer} spacing={6} >
-                    <DataCard xs={4} header="Game Stats"></DataCard>
-                    <DataCard xs={4} header="Game Stats"></DataCard>
-                    <DataCard xs={4} header="Game Stats"></DataCard>
-                </Grid>
+            <Grid container className={classes.topContainer} spacing={2} >
+                <DataCard xs={8} header="Games" queryItems={gameOptions} optionItems={optionMenu}>
+                    <Box className={classes.gameBoxContainer}>
+                        <Grid container item style={{ gap: 5 }} >   {/* rows */}
+                            <Gamebox/>
+                            <Gamebox/>
+                            <Gamebox/>
+                            <Gamebox/>
+                        </Grid>
+                        <Grid container item style={{ gap: 5}}>
+                            <Gamebox/>
+                            <Gamebox/>
+                            <Gamebox/>
+                            <Gamebox/>
+                        </Grid>
+                        <Grid container item style={{ gap: 5}}>
+                            <Gamebox/>
+                            <Gamebox/>
+                            <Gamebox/>
+                            <Gamebox/>
+                        </Grid>
+                        <Grid container item style={{ gap: 5}} >
+                            <Gamebox/>
+                            <Gamebox/>
+                            <Gamebox/>
+                            <Gamebox/>
+                        </Grid>
+                        <Grid container item style={{ gap: 5}} >
+                            <Gamebox/>
+                            <Gamebox/>
+                            <Gamebox/>
+                            <Gamebox/>
+                        </Grid>
+                    </Box>
+                </DataCard>
+                <DataCard xs={4} header="Standings" queryItems={standingsOptions} optionItems={optionMenu}>
+                </DataCard>
                 
+            </Grid>
+            <Grid container className={classes.topContainer} spacing={6} >
+                <DataCard xs={4} header="Game Stats" queryItems={gameStatsOptions} optionItems={optionMenu}></DataCard>
+                <DataCard xs={4} header="Game Stats" queryItems={gameStatsOptions} optionItems={optionMenu}></DataCard>
+                <DataCard xs={4} header="Game Stats" queryItems={gameStatsOptions} optionItems={optionMenu}></DataCard>
+            </Grid>
         </Container>
     )
 }
