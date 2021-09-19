@@ -69,10 +69,7 @@ interface EspnOpponentObject {
 interface EspnTeamSchedule {
     date: string, // convert to date type 
     opponent: EspnOpponentObject,
-
 }
-
-
 
 class Espn implements EspnApi {
     private domain: string
@@ -146,6 +143,8 @@ class Espn implements EspnApi {
             headers: this.headers
         }
 
+
+
         return axios(options) 
             .then(response => {
                 let $  = cheerio.load(response.data);
@@ -154,24 +153,29 @@ class Espn implements EspnApi {
                 // scheduleObject.scheduleData.teamSchedule[0].events.post // games that have concluded. 
                 
                 // console.log(scheduleObject.scheduleData.teamSchedule[0].events.pre[0].group);   // array holding matchups 
-                let matchups =  scheduleObject.scheduleData.teamSchedule[0].events.pre[0].group
-                
-                let scheduleArray = matchups.map((matchup) => {
-                    let schedule: EspnTeamSchedule = {
-                        date: matchup.date.date,
-                        opponent: {
-                            name: matchup.opponent.displayName,
-                            logo: matchup.opponent.logo,
-                            abbrev: matchup.opponent.abbrev,
-                            isHomeTeam: matchup.opponent.homeAwaySymbol === 'vs' ? false : true
+               
+                let matchups; 
+                if (team.href.split('/')[3] === 'nba') {
+                    matchups =  scheduleObject.scheduleData.teamSchedule[0].events.pre[0].group
+                } else {
+                    matchups= scheduleObject.scheduleData.teamSchedule[0].events.pre
+                }                
+                let scheduleArray = matchups.reduce((acc, matchup) => {
+                    if (typeof matchup.date !== 'undefined') {
+                        let schedule: EspnTeamSchedule = {
+                            date: matchup.date.date,
+                            opponent: {
+                                name: matchup.opponent.displayName,
+                                logo: matchup.opponent.logo,
+                                abbrev: matchup.opponent.abbrev,
+                                isHomeTeam: matchup.opponent.homeAwaySymbol === 'vs' ? false : true
+                            }
                         }
-                    }
-                    return schedule 
-                });
+                        acc.push( schedule )
+                    } return acc;
+                }, []);
                 return scheduleArray
             })
-        // let option 
-
     }
 
     async player(query: Query): Promise<EspnPlayer> {
@@ -259,15 +263,24 @@ const TestEspn = new Espn({});
 //     .catch(err => console.log(err));
 
 TestEspn.schedule(
+    // {
+    //     "id": "2",
+    //     "href": "https://www.espn.com/nba/team/_/name/bos/boston-celtics",
+    //     "name": "Boston Celtics",
+    //     "shortName": "Celtics",
+    //     "abbrev": "bos",
+    //     "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/bos.png&w=80&h=80&cquality=40&scale=crop&location=origin&transparent=true",
+    //     "conference": "Atlantic"
+    //   }
     {
-    id: '24',
-    href: 'https://www.espn.com/nba/team/_/name/sa/san-antonio-spurs',
-    name: 'San Antonio Spurs',
-    shortName: 'Spurs',
-    abbrev: 'sa',
-    logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/sa.png&w=80&h=80&cquality=40&scale=crop&location=origin&transparent=true',
-    conference: 'Southwest'
-    }
+        "id": "2",
+        "href": "https://www.espn.com/nfl/team/_/name/buf/buffalo-bills",
+        "name": "Buffalo Bills",
+        "shortName": "Bills",
+        "abbrev": "buf",
+        "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/nfl/500/buf.png&w=80&h=80&cquality=40&scale=crop&location=origin&transparent=true",
+        "conference": "AFC East"
+      }
 )
     .then(schedule => console.log(schedule))
     .catch(err => console.log(err));
