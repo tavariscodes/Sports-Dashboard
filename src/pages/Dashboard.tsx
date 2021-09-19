@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
-// import MainLayout from '../components/MainLayout';
+import { gql, useLazyQuery, useQuery } from '@apollo/client';
 import { useTheme, makeStyles, } from '@mui/styles';
 import { Theme, Box, Grid, Container, Paper, Typography, GridSize, IconButton, Menu, MenuItem} from '@mui/material';
-import { gql, useLazyQuery, useQuery } from '@apollo/client';
+// icons
 import BuildIcon from '@mui/icons-material/Build'
 import ArrowDropDownCircleIcon from '@mui/icons-material/ArrowDropDownCircle';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
+// Data context
+import { DataProvider, useData, useUpdateData } from '../components/DataContext';
 
+// Styling for dashboard components. 
 const styles = {
     root: {
         display: 'flex',
-        // justifyContent: 'center',
         flexDirection: 'column',
         width: '100vw',
         height: '100vh',
@@ -20,12 +22,10 @@ const styles = {
         
         width: '100%', backgroundColor: 'primary.main', display: 'flex', flexDirection: 'column',
     },
-    
-
     smDataCard: {
         width: '100%', backgroundColor: 'primary.light', display: 'flex', flexDirection: 'column',
 
-    },
+    }
        
 } as const
 
@@ -62,6 +62,7 @@ interface Team {
     teams: Team[]
 }
 
+// Data Card Queries
 
 const GET_TEAMS = gql`
     query teams($sport: String!) {
@@ -69,10 +70,115 @@ const GET_TEAMS = gql`
             name,
         }
     }
-
 `
 
-const Gamebox: React.FC = () => {
+const GET_SCHEDULE = gql`
+    query($teamName: String!, $teamSport: String!) {
+        team(name: $teamName, sport: $teamSport) {
+            abbrev,
+            name,
+            logo,
+            schedule {
+                date,
+                opponent {
+                 name,
+                 abbrev,
+                 isHomeTeam,
+                 logo
+            } 
+        }
+    }
+}
+`
+
+
+// Components and Interfaces
+
+interface GameboxContainerProps {
+    
+    
+}
+
+const GameboxContainer: React.FC = () => {
+    // relies on DataContext for populating 
+    const classes = useStyles();
+    const contextData = useData();
+    if (contextData) {
+        let currentTeam = contextData.team
+        let teamSchedule = contextData.team.schedule;
+        teamSchedule = teamSchedule.map((game: any, i: number) => {
+            let gameDate: Date | string = new Date(game.date)
+            gameDate = gameDate.getMonth().toString() + '/' + gameDate.getDate().toString();
+            return(<Gamebox key={i} team1={currentTeam.abbrev} team2={game.opponent.abbrev} date={gameDate} isHome={!game.opponent.isHome} team1Logo={currentTeam.logo} team2Logo={game.opponent.logo}/>)
+        })
+        // console.log(teamSchedule)
+        return (
+        <Box className={classes.gameBoxContainer}>
+            <Grid container item style={{ gap: 5 }} >   {/* rows */}
+            {teamSchedule.filter((team: any, i: any) => i < 4)}
+            </Grid>
+            <Grid container item style={{ gap: 5}}>
+            {teamSchedule.filter((team: any, i: any) => i > 4 && i <= 8)}
+            </Grid>
+            <Grid container item style={{ gap: 5}}>
+            {teamSchedule.filter((team: any, i: any) => i > 8 && i <= 12)}
+            </Grid>
+            <Grid container item style={{ gap: 5}} >
+            {teamSchedule.filter((team: any, i: any) => i > 12 && i <= 16)}
+            </Grid>
+            <Grid container item style={{ gap: 5}} >
+            {teamSchedule.filter((team: any, i: any) => i > 16 && i <= 20)}
+            </Grid>
+        </Box>)
+    }
+    return (
+        <Box className={classes.gameBoxContainer}>
+            sorry give us a moment
+            {/* <Grid container item style={{ gap: 5 }} >   
+
+                <Gamebox/>
+                <Gamebox/>
+                <Gamebox/>
+                <Gamebox/>
+            </Grid>
+            <Grid container item style={{ gap: 5}}>
+                <Gamebox/>
+                <Gamebox/>
+                <Gamebox/>
+                <Gamebox/>
+            </Grid>
+            <Grid container item style={{ gap: 5}}>
+                <Gamebox/>
+                <Gamebox/>
+                <Gamebox/>
+                <Gamebox/>
+            </Grid>
+            <Grid container item style={{ gap: 5}} >
+                <Gamebox/>
+                <Gamebox/>
+                <Gamebox/>
+                <Gamebox/>
+            </Grid>
+            <Grid container item style={{ gap: 5}} >
+                <Gamebox/>
+                <Gamebox/>
+                <Gamebox/>
+                <Gamebox/>
+            </Grid> */}
+        </Box>
+    )
+}
+
+interface GameboxProps {
+    team1: string,
+    team2: string,
+    isHome: boolean,
+    date: string,
+    team1Logo: string,
+    team2Logo: string
+}
+
+const Gamebox: React.FC<GameboxProps> = ({team1, team2, isHome, date, team1Logo, team2Logo}) => {
     const themes: Theme = useTheme()
     return (
         <Grid style={{
@@ -85,16 +191,16 @@ const Gamebox: React.FC = () => {
             padding: '5px'
             }} item xs>
              <Box style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-                <img src="https://a.espncdn.com/i/teamlogos/nba/500/bos.png" style={{height: '38px', width: '40px'}}/>
-                <Typography fontSize="14px" >Celtics</Typography>
+                <img src={team1Logo} style={{height: '38px', width: '40px'}}/>
+                <Typography fontSize="14px" >{team1.toUpperCase()}</Typography>
             </Box>
             <Box style={{display: 'flex', flexDirection: 'column', alignItems:'center',justifyContent: 'center'}}>
                 <FlashOnIcon sx={{color:'primary.dark', width: '50px', height: '32px'}}/>
-                <Typography fontSize="14px" >7:30pm</Typography>
+                <Typography fontSize="14px" >{date}</Typography>
             </Box>
             <Box style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-                <img src="https://a.espncdn.com/i/teamlogos/nba/500/bos.png" style={{height: '38px', width: '40px'}}/>
-                <Typography fontSize="14px" >Celtics</Typography>
+                <img src={team2Logo} style={{height: '38px', width: '40px'}}/>
+                <Typography fontSize="14px" >{team2.toUpperCase()}</Typography>
             </Box>
         </Grid>
     )
@@ -111,6 +217,8 @@ interface DataCardMenuProps {
 const DataCardMenu: React.FC<DataCardMenuProps> = ({name, iconComponent, menuItems, selectedHandler}) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
+
+
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -156,16 +264,24 @@ const DataCardMenu: React.FC<DataCardMenuProps> = ({name, iconComponent, menuIte
 interface DataCardProps {
     xs: GridSize,
     header: string,
-    queryItems: string[],
+    // queryItems: string[],
     optionItems: string[],
     children?: React.ReactNode,
 }
 
-const DataCard: React.FC<DataCardProps> = ({children, xs, header, queryItems, optionItems}) => {
+const DataCard: React.FC<DataCardProps> = ({children, xs, header, optionItems}) => {
     const [selectedQuery, setSelectedQuery] = useState<string | null>(null);
-    const [selectedOption, setSelectedOption] = useState<string | null>(null);
-    const [getTeams, {loading, error, data}] = useLazyQuery<Team>(GET_TEAMS);
+    const [selectedOption, setSelectedOption] = useState<string | null>('nba');
+    
+    const [dataToRender, setDataToRender] = useState<object | null>(null);
+    const [getTeams, {loading, error, data}] = useLazyQuery<Team>(GET_TEAMS);   // render this programmatically - change getTeams to getData ?
+    const [getData, {loading: scheduleLoading, error: scheduleError, data:scheduleData }] = useLazyQuery<Team>(GET_SCHEDULE)
     const classes = useStyles();
+    let queryItems: string[] = [];
+
+    useEffect(() => {
+        getTeams({variables: {sport: 'nba'}})
+    }, [])
 
     useEffect(() => {
         if (selectedOption) {
@@ -175,45 +291,62 @@ const DataCard: React.FC<DataCardProps> = ({children, xs, header, queryItems, op
 
     useEffect(() => {
         if (selectedQuery) {
-            alert(selectedQuery)
+            // Query data and render to component
+            // setDataToRender
+            getData({variables: {teamName: selectedQuery, teamSport: selectedOption?.toLowerCase()}})
         }   
     }, [selectedQuery])
 
-    if (loading) {return <p>Loading...</p>};
-    if (error) {return <p>{error}</p>};
+    useEffect(() => {
+        if (scheduleData) {
+            setDataToRender(scheduleData)
+        }
+    }, [scheduleData])
+    // if (scheduleData) {console.log(scheduleData);}
+    if (loading || scheduleLoading) {
+        return(
+            <DataProvider data={dataToRender} setData={setDataToRender}>
+                <Grid container item xs={xs} style={{marginTop: '5px', height: '100%'}}>
+                    <Paper sx={styles.dataCard} elevation={6}>
+                        Loading...
+                    </Paper>
+                </Grid>
+            </DataProvider>    
+        )
+    };
+    if (error || scheduleError) {return <p>{error || scheduleError}</p>};
     if (data) {
-        // if new data returned update queryItems
-        queryItems = data.teams.map(team => team.name);
+        // if new data return update queryItems
+        queryItems = data.teams.map(team => team.name);     
     }
-    
-
     return(
-        <Grid container item xs={xs} style={{marginTop: '5px', height: '100%'}}>
-            <Paper sx={styles.dataCard} elevation={6}>
-                <Box component="span" className={classes.dataCardHeader}>
-                    <Typography sx={{color: 'white'}} variant="h4">
-                        {header}
-                    </Typography>
-                    <Box style={{display: 'flex'}}>
-                        <DataCardMenu name="filter" selectedHandler={setSelectedQuery} menuItems={queryItems} iconComponent={<ArrowDropDownCircleIcon/>}/>
-                        <DataCardMenu name="options" selectedHandler={setSelectedOption} menuItems={optionItems} iconComponent={<BuildIcon/>}/>       
+        <DataProvider data={dataToRender} setData={setDataToRender}>
+            <Grid container item xs={xs} style={{marginTop: '5px', height: '100%'}}>
+                <Paper sx={styles.dataCard} elevation={6}>
+                    <Box component="span" className={classes.dataCardHeader}>
+                        <Typography sx={{color: 'white'}} variant="h4">
+                            {header}
+                        </Typography>
+                        <Box style={{display: 'flex'}}>
+                            <DataCardMenu name="filter" selectedHandler={setSelectedQuery} menuItems={queryItems} iconComponent={<ArrowDropDownCircleIcon/>}/>
+                            <DataCardMenu name="options" selectedHandler={setSelectedOption} menuItems={optionItems} iconComponent={<BuildIcon/>}/>       
+                        </Box>
                     </Box>
-                </Box>
-                {children}
-            </Paper>
-        </Grid>
+                    {children}
+                </Paper>
+            </Grid>
+        </DataProvider>
     )
 }
 
 export default () => { // Dashboard
     const classes = useStyles();
     const theme: Theme = useTheme();
-    const {loading, error, data} = useQuery<Team>(GET_TEAMS, {variables: {sport: 'nba'}});
-    if (loading) {return <div>"loading"</div>}
-    if (error) { return <div>{error}</div> }
-    if (!data) {return <p>Couldn't load your webpage</p>}
+    // if (loading) {return <div>"loading"</div>}
+    // if (error) { return <div>{error}</div> }
+    // if (!data) {return <p>Couldn't load your webpage</p>}
 
-    const gameOptions = data.teams.map(team => team.name);
+    // const gameOptions = data.teams.map(team => team.name);
     const standingsOptions = [''];
     const gameStatsOptions = [''];
     const optionMenu = ['NFL', 'NBA']
@@ -221,49 +354,18 @@ export default () => { // Dashboard
 
     return(
         <Container maxWidth={false} sx={styles.root}>
-            <Grid container className={classes.topContainer} spacing={2} >
-                <DataCard xs={8} header="Games" queryItems={gameOptions} optionItems={optionMenu}>
-                    <Box className={classes.gameBoxContainer}>
-                        <Grid container item style={{ gap: 5 }} >   {/* rows */}
-                            <Gamebox/>
-                            <Gamebox/>
-                            <Gamebox/>
-                            <Gamebox/>
-                        </Grid>
-                        <Grid container item style={{ gap: 5}}>
-                            <Gamebox/>
-                            <Gamebox/>
-                            <Gamebox/>
-                            <Gamebox/>
-                        </Grid>
-                        <Grid container item style={{ gap: 5}}>
-                            <Gamebox/>
-                            <Gamebox/>
-                            <Gamebox/>
-                            <Gamebox/>
-                        </Grid>
-                        <Grid container item style={{ gap: 5}} >
-                            <Gamebox/>
-                            <Gamebox/>
-                            <Gamebox/>
-                            <Gamebox/>
-                        </Grid>
-                        <Grid container item style={{ gap: 5}} >
-                            <Gamebox/>
-                            <Gamebox/>
-                            <Gamebox/>
-                            <Gamebox/>
-                        </Grid>
-                    </Box>
+            <Grid container className={classes.topContainer} spacing={2}>
+                <DataCard xs={8} header="Games" optionItems={optionMenu}>
+                    <GameboxContainer />
                 </DataCard>
-                <DataCard xs={4} header="Standings" queryItems={standingsOptions} optionItems={optionMenu}>
+                <DataCard xs={4} header="Standings" optionItems={optionMenu}>
                 </DataCard>
                 
             </Grid>
             <Grid container className={classes.topContainer} spacing={6} >
-                <DataCard xs={4} header="Game Stats" queryItems={gameStatsOptions} optionItems={optionMenu}></DataCard>
-                <DataCard xs={4} header="Game Stats" queryItems={gameStatsOptions} optionItems={optionMenu}></DataCard>
-                <DataCard xs={4} header="Game Stats" queryItems={gameStatsOptions} optionItems={optionMenu}></DataCard>
+                <DataCard xs={4} header="Game Stats"optionItems={optionMenu}></DataCard>
+                <DataCard xs={4} header="Game Stats"  optionItems={optionMenu}></DataCard>
+                <DataCard xs={4} header="Game Stats" optionItems={optionMenu}></DataCard>
             </Grid>
         </Container>
     )
