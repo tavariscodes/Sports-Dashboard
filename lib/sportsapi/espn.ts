@@ -59,6 +59,21 @@ interface EspnPlayerStat {
     career: object; // refactor to careerStat <- would actually probably need to create stattypes for each sport 
 }
 
+interface EspnOpponentObject {
+    name: string;
+    abbrev: string;
+    logo: string;
+    isHomeTeam: boolean;
+}
+
+interface EspnTeamSchedule {
+    date: string, // convert to date type 
+    opponent: EspnOpponentObject,
+
+}
+
+
+
 class Espn implements EspnApi {
     private domain: string
     private headers: {[key: string]: string};
@@ -121,6 +136,42 @@ class Espn implements EspnApi {
                 return statsArray;
             })
             .catch(err => {return(err)})
+    }
+
+    async schedule(team: EspnTeam): Promise<EspnTeamSchedule[]> {
+        let seasonType: string = "2"; // regular season, pre-season or playoffs
+        let url: string | string[] = team.href.split('/'); url.splice(5, 0, 'schedule'); url[url.length - 1] = `seasontype/${seasonType}`; url = url.join('/');
+        let options = {
+            url,
+            headers: this.headers
+        }
+
+        return axios(options) 
+            .then(response => {
+                let $  = cheerio.load(response.data);
+                let scheduleObject: any = scriptTagToJson($);  // refactor type 'any' here
+                // scheduleObject.scheduleData.teamSchedule[0].events.pre // scheduled games that haven't taken place;
+                // scheduleObject.scheduleData.teamSchedule[0].events.post // games that have concluded. 
+                
+                // console.log(scheduleObject.scheduleData.teamSchedule[0].events.pre[0].group);   // array holding matchups 
+                let matchups =  scheduleObject.scheduleData.teamSchedule[0].events.pre[0].group
+                
+                let scheduleArray = matchups.map((matchup) => {
+                    let schedule: EspnTeamSchedule = {
+                        date: matchup.date.date,
+                        opponent: {
+                            name: matchup.opponent.displayName,
+                            logo: matchup.opponent.logo,
+                            abbrev: matchup.opponent.abbrev,
+                            isHomeTeam: matchup.opponent.homeAwaySymbol === 'vs' ? false : true
+                        }
+                    }
+                    return schedule 
+                });
+                return scheduleArray
+            })
+        // let option 
+
     }
 
     async player(query: Query): Promise<EspnPlayer> {
@@ -203,8 +254,22 @@ const TestEspn = new Espn({});
 //   )
 //   .then(stats => console.log(stats))
 //   .catch(err => console.log(err));
-TestEspn.teams({sport: 'nba'})
-    .then(teams => console.log(teams))
+// TestEspn.teams({sport: 'nba'})
+//     .then(teams => console.log(teams))
+//     .catch(err => console.log(err));
+
+TestEspn.schedule(
+    {
+    id: '24',
+    href: 'https://www.espn.com/nba/team/_/name/sa/san-antonio-spurs',
+    name: 'San Antonio Spurs',
+    shortName: 'Spurs',
+    abbrev: 'sa',
+    logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/sa.png&w=80&h=80&cquality=40&scale=crop&location=origin&transparent=true',
+    conference: 'Southwest'
+    }
+)
+    .then(schedule => console.log(schedule))
     .catch(err => console.log(err));
 
 export default Espn;
