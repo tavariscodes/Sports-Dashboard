@@ -51,7 +51,6 @@ const typeDefs = gql`
     teams(sport: String!): [Team]
     team(name: String!, sport: String!): Team
     player(name: String!, sport: String!): Player
-    schedule(team: String!, sport: String!): Schedule
   }
 `
 
@@ -75,6 +74,7 @@ const resolvers = {
         }
       }
     },
+ 
     Query: {
         teams: async (_, args) => {
           try {
