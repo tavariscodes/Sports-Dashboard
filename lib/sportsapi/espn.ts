@@ -143,8 +143,6 @@ class Espn implements EspnApi {
             headers: this.headers
         }
 
-
-
         return axios(options) 
             .then(response => {
                 let $  = cheerio.load(response.data);
@@ -227,13 +225,13 @@ class Espn implements EspnApi {
                         })
                         playerStat.career[element.ttl] = careerStats;
                     } else if (query.type === 'season') {
-                        let seasonStats = {};
                         playerStat.season[element.ttl] = [];
-                        for (let j = 0; j < element.row.length; j++) {
-                            element.col.forEach((elem, i) => {
-                                typeof elem === 'object' ? seasonStats[elem.data] = element.row[j][i]: seasonStats[elem] = element.row[j][i]; // set career stat object property   
+                         for (let j = 0; j < element.row.length; j++) { // for each year 
+                            let seasonStats = {};
+                            element.col.forEach((stat, i) => { // for each stat
+                                typeof stat === 'object' ? seasonStats[stat.data] = element.row[j][i]: seasonStats[stat] = element.row[j][i]; // set career stat object property   
                             });
-                        playerStat.season[element.ttl].push(seasonStats)
+                            playerStat.season[element.ttl].push(seasonStats)
                         } 
                     }
                 }
@@ -246,44 +244,44 @@ class Espn implements EspnApi {
 }
 
 const TestEspn = new Espn({});
-// TestEspn.playerStats({
-//     id: '6482ece5f90392e2ffdd13901fdd3a49',
-//     uid: 's:40~l:46~a:3908809',
-//     guid: '6482ece5f90392e2ffdd13901fdd3a49',
-//     displayName: 'Donovan Mitchell',
-//     url: 'https://www.espn.com/nba/player/_/id/3908809/donovan-mitchell',
-//     team: 'Utah Jazz'
-//   }
-//   , {sport: 'nba', type: 'season'}
-//   )
-//   .then(stats => console.log(stats))
-//   .catch(err => console.log(err));
+TestEspn.playerStats({
+    id: '6482ece5f90392e2ffdd13901fdd3a49',
+    uid: 's:40~l:46~a:3908809',
+    guid: '6482ece5f90392e2ffdd13901fdd3a49',
+    displayName: 'Donovan Mitchell',
+    url: 'https://www.espn.com/nba/player/_/id/3908809/donovan-mitchell',
+    team: 'Utah Jazz'
+  }
+  , {sport: 'nba', type: 'season'}
+  )
+  .then(stats => {console.log(stats.season)})
+  .catch(err => console.log(err));
 // TestEspn.teams({sport: 'nba'})
 //     .then(teams => console.log(teams))
 //     .catch(err => console.log(err));
 
-TestEspn.schedule(
-    // {
-    //     "id": "2",
-    //     "href": "https://www.espn.com/nba/team/_/name/bos/boston-celtics",
-    //     "name": "Boston Celtics",
-    //     "shortName": "Celtics",
-    //     "abbrev": "bos",
-    //     "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/bos.png&w=80&h=80&cquality=40&scale=crop&location=origin&transparent=true",
-    //     "conference": "Atlantic"
-    //   }
-    {
-        "id": "2",
-        "href": "https://www.espn.com/nfl/team/_/name/buf/buffalo-bills",
-        "name": "Buffalo Bills",
-        "shortName": "Bills",
-        "abbrev": "buf",
-        "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/nfl/500/buf.png&w=80&h=80&cquality=40&scale=crop&location=origin&transparent=true",
-        "conference": "AFC East"
-      }
-)
-    .then(schedule => console.log(schedule))
-    .catch(err => console.log(err));
+// TestEspn.schedule(
+//     // {
+//     //     "id": "2",
+//     //     "href": "https://www.espn.com/nba/team/_/name/bos/boston-celtics",
+//     //     "name": "Boston Celtics",
+//     //     "shortName": "Celtics",
+//     //     "abbrev": "bos",
+//     //     "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/bos.png&w=80&h=80&cquality=40&scale=crop&location=origin&transparent=true",
+//     //     "conference": "Atlantic"
+//     //   }
+//     {
+//         "id": "2",
+//         "href": "https://www.espn.com/nfl/team/_/name/buf/buffalo-bills",
+//         "name": "Buffalo Bills",
+//         "shortName": "Bills",
+//         "abbrev": "buf",
+//         "logo": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/nfl/500/buf.png&w=80&h=80&cquality=40&scale=crop&location=origin&transparent=true",
+//         "conference": "AFC East"
+//       }
+// )
+//     .then(schedule => console.log(schedule))
+//     .catch(err => console.log(err));
 
 export default Espn;
 
