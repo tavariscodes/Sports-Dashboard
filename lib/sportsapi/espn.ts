@@ -71,6 +71,18 @@ interface EspnTeamSchedule {
     opponent: EspnOpponentObject,
 }
 
+
+// soo temporary
+
+interface EspnNbaPlayerStat {
+    season: string;
+    gp: string;
+    min: string;
+    ast: string;
+    pts: string;
+   'fg%': string;
+}
+
 class Espn implements EspnApi {
     private domain: string
     private headers: {[key: string]: string};
@@ -149,9 +161,7 @@ class Espn implements EspnApi {
                 let scheduleObject: any = scriptTagToJson($);  // refactor type 'any' here
                 // scheduleObject.scheduleData.teamSchedule[0].events.pre // scheduled games that haven't taken place;
                 // scheduleObject.scheduleData.teamSchedule[0].events.post // games that have concluded. 
-                
                 // console.log(scheduleObject.scheduleData.teamSchedule[0].events.pre[0].group);   // array holding matchups 
-               
                 let matchups; 
                 if (team.href.split('/')[3] === 'nba') {
                     matchups =  scheduleObject.scheduleData.teamSchedule[0].events.pre[0].group
@@ -203,9 +213,8 @@ class Espn implements EspnApi {
             .catch(err => {return(err)}); 
     }
 
-    async playerStats(player: EspnPlayer, query?: statQuery): Promise<EspnPlayerStat> {
+    async playerStats(player: EspnPlayer, seasonType: string = "career"): Promise<EspnNbaPlayerStat[]> {
         // refactor to return both career and season stats in one object :)
-
         let url: string | string[] = player.url.split('/'); url.splice(5, 0, 'stats'); url = url.join('/'); // create stats url 
         let options: AxiosRequestConfig = {
             url,
@@ -218,24 +227,27 @@ class Espn implements EspnApi {
                 let playerStat: EspnPlayerStat = {career: {}, season: {}};
                 for( let x = 0; x < statsObject.player.stat.tbl.length; x++ ) { // loop thru each stat table
                     let element = statsObject.player.stat.tbl[x];  // get each table element
-                    if (query.type === 'career') {
                         let careerStats = {};
                         element.col.forEach((elem, i) => {
-                            typeof elem === 'object' ? careerStats[elem.data] = element.car[i]: careerStats[elem] = element.car[i]; // set career stat object property
+                            typeof elem === 'object' ? careerStats[elem.data.toLowerCase()] = element.car[i]: careerStats[elem] = element.car[i]; // set career stat object property
                         })
                         playerStat.career[element.ttl] = careerStats;
-                    } else if (query.type === 'season') {
                         playerStat.season[element.ttl] = [];
                          for (let j = 0; j < element.row.length; j++) { // for each year 
                             let seasonStats = {};
                             element.col.forEach((stat, i) => { // for each stat
-                                typeof stat === 'object' ? seasonStats[stat.data] = element.row[j][i]: seasonStats[stat] = element.row[j][i]; // set career stat object property   
+                                typeof stat === 'object' ? seasonStats[stat.data.toLowerCase()] = element.row[j][i]: seasonStats[stat] = element.row[j][i]; // set career stat object property   
                             });
                             playerStat.season[element.ttl].push(seasonStats)
                         } 
-                    }
                 }
-                return playerStat;
+                // check if player nba or nfl
+                if (seasonType === 'career') {
+                    console.log(playerStat.season);
+                    return playerStat.season['Regular Season Averages'];
+                } else{ 
+                    return playerStat
+                }
             })
             
             .catch(err => {return(err)})
@@ -244,17 +256,22 @@ class Espn implements EspnApi {
 }
 
 const TestEspn = new Espn({});
-TestEspn.playerStats({
-    id: '6482ece5f90392e2ffdd13901fdd3a49',
-    uid: 's:40~l:46~a:3908809',
-    guid: '6482ece5f90392e2ffdd13901fdd3a49',
-    displayName: 'Donovan Mitchell',
-    url: 'https://www.espn.com/nba/player/_/id/3908809/donovan-mitchell',
-    team: 'Utah Jazz'
+TestEspn.playerStats( {
+    "displayName": "Ezekiel Elliott",
+    "url": "http://www.espn.com/nfl/player/_/id/3051392/ezekiel-elliott",
+    "id": "74394a0b53f256565b7b1c69c62600c6",
+    "team": "Dallas Cowboys",
+    "uid": "",
+    "guid":""
   }
-  , {sport: 'nba', type: 'season'}
   )
-  .then(stats => {console.log(stats.season)})
+  .then(careerStats => {
+    //   console.log(c)
+      careerStats.map(stat => {
+        console.log(stat)
+      })
+    // console.log(careerStats)
+  })
   .catch(err => console.log(err));
 // TestEspn.teams({sport: 'nba'})
 //     .then(teams => console.log(teams))
