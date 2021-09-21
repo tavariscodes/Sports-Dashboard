@@ -1,6 +1,19 @@
-import React, {useContext, useState} from 'react';
+import React, {useContext, useState, useMemo} from 'react';
 
-const DataContext = React.createContext<null | any>(null);
+const DataContext = React.createContext<{data: any;
+    setData: React.Dispatch<any>;
+    query: string | null;
+    setQuery: React.Dispatch<string | null>
+    option: string | null;
+    setOption: React.Dispatch<string | null>
+}>(({
+        data: {},
+        setData: () => {},
+        query: null,
+        setQuery: () => {},
+        option: null,
+        setOption: () => {}
+    }));
 const DataUpdateContext = React.createContext<((data: object) => void) | null>(null);
 
 export const useData = () => {
@@ -12,22 +25,32 @@ export const useUpdateData = () => {
 }
 
 interface DataProviderProps {
-    data: object | null,
-    setData: React.Dispatch<object | null>,
-    children: JSX.Element
+    data: object | any,
+    setData: React.Dispatch<object | any>,
+    query: string | null,
+    setQuery: React.Dispatch<string | null>,
+    option: string | null,
+    setOption: React.Dispatch<string | null>,
+    children: JSX.Element,
 }
 
-export const DataProvider: React.FC<DataProviderProps> = ({children, data, setData}) => {
+export const DataProvider: React.FC<DataProviderProps> = ({children, data, setData, query, setQuery, option, setOption}) => {
     // const [dataToRender, setDataToRender] = useState<object>({test: 'successful'})
+    const value = useMemo(
+        () => ({ 
+            data, setData,
+            query, setQuery,
+            option, setOption
+        }),
+        [data, query, option]
+    );
 
-    const updateData = (data: object) => {
+    const updateData = (data: object | any) => {
         setData(data)
     }
     return(
-        <DataContext.Provider value={data}>
-            <DataUpdateContext.Provider value={updateData}>
+        <DataContext.Provider value={value}>
                 {children}
-            </DataUpdateContext.Provider>
         </DataContext.Provider>
     )
 }
