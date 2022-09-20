@@ -20,6 +20,7 @@ const typeDefs = gql`
     abbrev: String
     logo: String
     conference: String
+    schedule: [Schedule],
     stats: [TeamStats]
   }
 
@@ -31,6 +32,18 @@ const typeDefs = gql`
     dir: String
     hidesort: Boolean
     category: String
+  }
+  
+  type Opponent {
+    name: String,
+    abbrev: String,
+    logo: String,
+    isHomeTeam: Boolean,
+  }
+
+  type Schedule {
+    date: String,
+    opponent: Opponent,
   }
 
   # defines the Query special type object
@@ -51,8 +64,17 @@ const resolvers = {
         } catch (error) {
           throw new ApolloError(error)
         }
-      } 
+      },
+      async schedule(team) {
+        try {
+          let schedule = await espnapi.schedule(team);
+          return schedule;
+        } catch(error) {
+          throw new ApolloError(error)
+        }
+      }
     },
+ 
     Query: {
         teams: async (_, args) => {
           try {
@@ -79,8 +101,7 @@ const resolvers = {
           } catch (error) {
             throw new ApolloError(error);
           }
-          
-        }
+        },
     },
 };
 
